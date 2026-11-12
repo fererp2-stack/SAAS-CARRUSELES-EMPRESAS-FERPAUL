@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#001f3f">
+<title>Carruseles La Suisse</title>
+<script>
+  // ▼▼▼ ÚNICO PASO: pega aquí tu URL /exec de Apps Script (entre las comillas) ▼▼▼
+  var APP_URL = 'https://script.google.com/macros/s/AKfycbxr4Anm4VkZscJFdokl_P7epC9j96gxG3Ffv_ZnRNSNpBuyHEhpiwDcHLx6IM0mTtnmbA/exec';
+  // ▲▲▲ No hace falta tocar nada más de este archivo ▲▲▲
+</script>
+<style>
+  /* Máscara de GitHub Pages: la app de Apps Script ocupa toda la pantalla dentro de un iframe.
+     Con ?to=https://… la misma página sirve de bienvenida para los QR: muestra el logo y abre el destino. */
+  :root { --bg: #f4f6fa; --text: #001f3f; --muted: #5b6b7f; --accent: #0074D9; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0d1520; --text: #e8eef6; --muted: #9fb0c3; --accent: #4da3ff; } }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+  .centro { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; text-align: center; }
+  .respaldo { z-index: -1; }
+  a { color: var(--accent); font-weight: 700; }
+  small, .bv p { color: var(--muted); }
+  .bv { display: none; z-index: 2; background: var(--bg); }
+  html.qr .bv { display: flex; } html.qr .respaldo { display: none; }
+  .bv h1 { margin: 0; font-size: 22px; } .bv p { margin: 0; font-size: 17px; }
+  .logo { width: 128px; height: 128px; border-radius: 50%; background: #fff; box-shadow: 0 8px 28px rgba(0,0,0,.14); display: flex; align-items: center; justify-content: center;
+    overflow: hidden; font-size: 44px; font-weight: 800; color: var(--accent); animation: pop .5s ease-out both; }
+  .logo img { width: 86%; height: 86%; object-fit: contain; }
+  .est { color: #F5B301; font-size: 30px; letter-spacing: 6px; }
+  .barra { width: 160px; height: 4px; border-radius: 4px; background: rgba(127,127,127,.2); overflow: hidden; }
+  .barra i { display: block; height: 100%; width: 0; background: var(--accent); animation: carga 1.2s linear forwards; }
+  #bv-ir { visibility: hidden; }
+  @keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes carga { to { width: 100%; } }
+  @media (prefers-reduced-motion: reduce) { .logo, .barra i { animation: none; } .barra i { width: 100%; } }
+</style>
+</head>
+<body>
+  <!-- Detrás de la app: solo se ve mientras carga o si el navegador no la deja mostrar. -->
+  <div class="centro respaldo">
+    <div id="cargando">Cargando Carruseles La Suisse…</div>
+    <small id="directo">¿No carga? <a id="enlace" href="#" target="_top" rel="noopener">Abrir la app directamente</a></small>
+  </div>
+  <!-- Bienvenida de los QR (?to=…): el escaneo nunca pasa por Apps Script. -->
+  <main class="centro bv" role="status" aria-live="polite">
+    <div class="logo" id="bv-logo"><span id="bv-ini">★</span></div>
+    <h1 id="bv-nombre"></h1>
+    <div class="est" id="bv-est" hidden>★★★★★</div>
+    <p id="bv-msg">Abriendo…</p>
+    <div class="barra" aria-hidden="true"><i></i></div>
+    <a id="bv-ir" href="#" rel="noopener">Si no se abre solo, toca aquí</a>
+  </main>
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); }, q = new URLSearchParams(location.search), to = q.get('to');
+      // Solo se abren direcciones https: nada de javascript:, data: ni otros esquemas.
+      var seguro = function (u) { return /^https:\/\/[^\s<>"']+$/i.test(String(u || '')); };
+      if (to !== null) {
+        document.documentElement.className = 'qr';
+        if (!seguro(to)) { $('bv-msg').textContent = 'Este código no es válido'; return; }
+        var nombre = (q.get('n') || '').slice(0, 60), p = nombre.trim().split(/\s+/).filter(Boolean);
+        $('bv-nombre').textContent = nombre;
+        $('bv-msg').textContent = (q.get('m') || 'Abriendo…').slice(0, 80);
+        document.title = nombre || 'Abriendo…';
+        if (p.length) $('bv-ini').textContent = (p[0][0] + (p[1] ? p[1][0] : '')).toUpperCase();
+        if (q.get('t') === 'google') $('bv-est').hidden = false;
+        var l = q.get('l') || '';
+        if (/^[\w-]{10,80}$/.test(l)) {
+          var im = new Image();
+          im.alt = nombre ? 'Logo de ' + nombre : 'Logo';
+          im.onload = function () { $('bv-logo').replaceChildren(im); };
+          im.src = 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(l) + '&sz=w300';
+        }
+        $('bv-ir').href = to;
+        setTimeout(function () { location.replace(to); }, 1200);
+        setTimeout(function () { $('bv-ir').style.visibility = 'visible'; }, 3200);
+        return;
+      }
+      // Modo normal: la app a pantalla completa.
+      if (!seguro(APP_URL)) {
+        $('cargando').textContent = 'Falta pegar la URL de la app en este archivo (APP_URL, arriba de todo).';
+        $('directo').hidden = true;
+        return;
+      }
+      $('enlace').href = APP_URL;
+      var f = document.createElement('iframe');
+      f.src = APP_URL; f.title = document.title;
+      f.allow = 'clipboard-read; clipboard-write; fullscreen';
+      f.referrerPolicy = 'no-referrer-when-downgrade';
+      document.body.appendChild(f);
+    })();
+  </script>
+</body>
+</html>
